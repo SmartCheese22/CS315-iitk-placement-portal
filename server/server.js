@@ -32,13 +32,13 @@ app.use('/auth', auth)
 // Test DB then start
 db.getConnection()
     .then(conn => {
-        console.log('✅ MySQL connected — placement_portal');
+        console.log(' MySQL connected — placement_portal');
         conn.release();
         app.listen(PORT, () => {
-            console.log(`🚀 Server running at http://localhost:${PORT}`);
+            console.log(` Server running at http://localhost:${PORT}`);
         });
     })
     .catch(err => {
-        console.error('❌ DB connection failed:', err.message);
+        console.error(' DB connection failed:', err.message);
         process.exit(1);
     });

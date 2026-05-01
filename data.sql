@@ -1,9 +1,7 @@
 -- ============================================================
--- CAMPUS PLACEMENT PORTAL — CS315 IITK
--- data.sql : schema + triggers + views + stored procedure + seed data
+-- data.sql : schema + triggers + views + seed data
 -- ============================================================
 
--- CREATE DATABASE IF NOT EXISTS placement_portal;
 USE defaultdb;
 
 -- Drop everything first
@@ -121,12 +119,11 @@ BEGIN
     END IF;
 END$$
 
--- TRIGGER 2: When offer is accepted → auto-reject other applications + mark student placed
+-- TRIGGER 2: When offer is accepted : auto-reject other applications + mark student placed
 -- NOTE: This trigger does NOT touch the OFFER table at all.
 --       Declining other pending offers is handled BEFORE this trigger fires,
 --       inside the accept_placement_offer stored procedure (Step 1 of the procedure).
 --       By the time this trigger runs (Step 2), all other offers are already declined,
---       so there is zero risk of a mutating table error.
 CREATE TRIGGER trg_auto_reject_on_acceptance
 AFTER UPDATE ON OFFER
 FOR EACH ROW
@@ -174,14 +171,14 @@ END$$
 
 -- Called by the backend instead of a raw UPDATE OFFER SET accepted.
 --
--- Execution order (critical):
+-- Execution order :
 --   Step 1 — Decline all OTHER pending offers for this student first.
 --             At this point no trigger fires on OFFER that touches OFFER,
 --             so there is no conflict.
 --   Step 2 — Accept the chosen offer. This fires trg_auto_reject_on_acceptance,
 --             which updates APPLICATION and STUDENT only. By this point OFFER
 --             is already clean (Step 1 handled it), so the trigger has nothing
---             left to do on OFFER and the mutating table error cannot occur.
+--             left to do on OFFER.
 --
 -- The EXIT HANDLER ensures a full rollback if anything fails mid-way,
 -- keeping APPLICATION, STUDENT, OFFER, and JOB_ROLE in a consistent state.
@@ -206,7 +203,7 @@ BEGIN
         -- Step 1: Decline all other pending offers for this student FIRST.
         --         Do this before the acceptance update so that when the
         --         trigger fires in Step 2 there is nothing left to update
-        --         in OFFER, eliminating the mutating table conflict entirely.
+        --         in OFFER.
         UPDATE OFFER
         SET    acceptance_status = 'declined'
         WHERE  student_id        = v_student_id
@@ -214,9 +211,9 @@ BEGIN
           AND  acceptance_status = 'pending';
 
         -- Step 2: Accept the chosen offer.
-        --         Fires trg_auto_reject_on_acceptance → updates APPLICATION
+        --         Fires trg_auto_reject_on_acceptance : updates APPLICATION
         --         (rejects other apps) and STUDENT (sets eligible = FALSE).
-        --         Also fires trg_close_role_when_full → closes role if full.
+        --         Also fires trg_close_role_when_full : closes role if full.
         UPDATE OFFER
         SET    acceptance_status = 'accepted'
         WHERE  offer_id = p_offer_id;
@@ -361,8 +358,8 @@ INSERT INTO APPLICATION (student_id, role_id, status, applied_date) VALUES
 (3,  7,  'applied',     '2026-01-13'),
 (4,  7,  'applied',     '2026-01-10'),
 (4,  11, 'applied',     '2026-01-14'),
-(5,  1,  'offered',     '2026-01-10'),  -- Karan already placed
-(5,  12, 'offered',    '2026-01-11'),  -- auto-rejected because Karan is placed
+(5,  1,  'offered',     '2026-01-10'),
+(5,  12, 'offered',     '2026-01-11'),
 (6,  11, 'applied',     '2026-01-10'),
 (7,  3,  'shortlisted', '2026-01-10'),
 (7,  8,  'applied',     '2026-01-12'),
@@ -383,8 +380,8 @@ INSERT INTO APPLICATION (student_id, role_id, status, applied_date) VALUES
 (19, 7,  'applied',     '2026-01-13'),
 (20, 3,  'shortlisted', '2026-01-10'),
 (20, 8,  'applied',     '2026-01-12'),
-(21, 1,  'offered',     '2026-01-10'),  -- Prathamesh: Google offer pending
-(21, 12, 'shortlisted', '2026-01-11'); -- Prathamesh: DE Shaw shortlisted (auto-rejected on Google accept)
+(21, 1,  'offered',     '2026-01-10'),
+(21, 12, 'shortlisted', '2026-01-11');
 
 INSERT INTO INTERVIEW_ROUND (app_id, round_no, round_type, result, round_date) VALUES
 (1,  1, 'Online Assessment', 'pass', '2026-01-15'),
@@ -408,12 +405,8 @@ INSERT INTO INTERVIEW_ROUND (app_id, round_no, round_type, result, round_date) V
 (29, 1, 'Online Assessment', 'pass', '2026-01-15'),
 (29, 2, 'Technical',         'pass', '2026-01-20');
 
--- NOTE: Student 5 (Karan Patel) is seeded as already accepted/placed.
---       The trigger only fires on UPDATE not INSERT, so eligible = FALSE
---       is set directly in the STUDENT row above and the other offer
---       application is seeded as 'rejected' to keep data consistent.
 INSERT INTO OFFER (student_id, role_id, package_offered, acceptance_status, offer_date) VALUES
-(5,  1, 45.00, 'accepted', '2026-01-25'),  -- Karan: placed at Google SWE
+(5,  1, 45.00, 'accepted', '2026-01-25'),
 (18, 1, 45.00, 'pending',  '2026-01-25'),  -- Shreya: Google offer pending
 (21, 1, 45.00, 'pending',  '2026-01-26');  -- Prathamesh: Google offer pending
 

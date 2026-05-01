@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PlacementPortal — CS315 IITK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #0a0c10;
+  --surface:  #0f1318;
+  --card:     #141920;
+  --border:   #1e2730;
+  --border2:  #2a3540;
+  --accent:   #00d4aa;
+  --accent2:  #0088ff;
+  --accent3:  #ff6b35;
+  --text:     #e2e8f0;
+  --muted:    #64748b;
+  --muted2:   #94a3b8;
+  --green:    #22c55e;
+  --red:      #ef4444;
+  --yellow:   #f59e0b;
+  --purple:   #a855f7;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Syne', sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── GRID NOISE BACKGROUND ── */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image: radial-gradient(circle at 20% 20%, rgba(0,212,170,0.04) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, rgba(0,136,255,0.04) 0%, transparent 50%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 220px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-logo .logo-tag {
+  font-size: 9px;
+  color: var(--accent);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.sidebar-logo h1 {
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+.sidebar-logo .course-tag {
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--border);
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 0;
+  overflow-y: auto;
+}
+
+.nav-section-label {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 12px 20px 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  cursor: pointer;
+  color: var(--muted2);
+  transition: all 0.15s;
+  border-left: 2px solid transparent;
+  font-size: 12px;
+  font-weight: 500;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  background: rgba(0,212,170,0.06);
+}
+.nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  font-size: 10px;
+  color: var(--muted);
+}
+.status-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  margin-right: 6px;
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%,100%{opacity:1;} 50%{opacity:0.4;}
+}
+
+/* ── MAIN CONTENT ── */
+#main {
+  margin-left: 220px;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.topbar-title {
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.badge-role {
+  background: rgba(0,212,170,0.1);
+  color: var(--accent);
+  border: 1px solid rgba(0,212,170,0.3);
+  padding: 3px 10px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── PAGES ── */
+.page { display: none; padding: 28px; animation: fadeIn 0.2s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+
+/* ── SECTION HEADER ── */
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.section-header h2 {
+  font-family: var(--sans);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+}
+.section-header p {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── STAT CARDS ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: var(--border2); }
+.stat-card::before {
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:2px;
+}
+.stat-card.c-green::before { background: var(--green); }
+.stat-card.c-blue::before  { background: var(--accent2); }
+.stat-card.c-accent::before{ background: var(--accent); }
+.stat-card.c-orange::before{ background: var(--accent3); }
+
+.stat-label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+.stat-value { font-family: var(--sans); font-size: 32px; font-weight: 800; color: var(--text); line-height: 1; }
+.stat-sub   { font-size: 10px; color: var(--muted); margin-top: 6px; }
+
+/* ── TABLE ── */
+.table-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.table-header-title {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.table-header-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  background: rgba(0,0,0,0.2);
+  white-space: nowrap;
+}
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+tbody td {
+  padding: 11px 16px;
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+}
+.mono { font-family: var(--mono); }
+.muted-cell { color: var(--muted2); }
+
+/* ── BADGES / PILLS ── */
+.pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.pill-green  { background: rgba(34,197,94,0.12);  color: var(--green);  border: 1px solid rgba(34,197,94,0.25); }
+.pill-red    { background: rgba(239,68,68,0.12);   color: var(--red);    border: 1px solid rgba(239,68,68,0.25); }
+.pill-yellow { background: rgba(245,158,11,0.12);  color: var(--yellow); border: 1px solid rgba(245,158,11,0.25); }
+.pill-blue   { background: rgba(0,136,255,0.12);   color: var(--accent2);border: 1px solid rgba(0,136,255,0.25); }
+.pill-purple { background: rgba(168,85,247,0.12);  color: var(--purple); border: 1px solid rgba(168,85,247,0.25); }
+.pill-accent { background: rgba(0,212,170,0.12);   color: var(--accent); border: 1px solid rgba(0,212,170,0.25); }
+.pill-muted  { background: rgba(100,116,139,0.12); color: var(--muted2); border: 1px solid rgba(100,116,139,0.25); }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  letter-spacing: 0.3px;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+}
+.btn-primary:hover { background: #00efc0; transform: translateY(-1px); }
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border2);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger {
+  background: rgba(239,68,68,0.15);
+  color: var(--red);
+  border: 1px solid rgba(239,68,68,0.3);
+}
+.btn-danger:hover { background: rgba(239,68,68,0.25); }
+.btn-success {
+  background: rgba(34,197,94,0.15);
+  color: var(--green);
+  border: 1px solid rgba(34,197,94,0.3);
+}
+.btn-success:hover { background: rgba(34,197,94,0.25); }
+.btn-sm { padding: 5px 10px; font-size: 10px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  width: 500px;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn { from{transform:scale(0.95);opacity:0;} to{transform:scale(1);opacity:1;} }
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-head h3 { font-family: var(--sans); font-size: 16px; font-weight: 700; }
+.modal-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ── FORM ── */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.form-input, .form-select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  transition: border-color 0.15s;
+  outline: none;
+}
+.form-input:focus, .form-select:focus { border-color: var(--accent); }
+.form-select option { background: var(--card); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ── DASHBOARD CHARTS ── */
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.chart-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+.chart-title { font-family: var(--sans); font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.chart-sub   { font-size: 10px; color: var(--muted); margin-bottom: 18px; }
+
+/* BAR CHART */
+.bar-chart { display: flex; flex-direction: column; gap: 10px; }
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-label { width: 60px; font-size: 11px; color: var(--muted2); text-align: right; flex-shrink: 0; }
+.bar-track { flex: 1; height: 22px; background: rgba(255,255,255,0.04); border-radius: 3px; overflow: hidden; position: relative; }
+.bar-fill  { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); display: flex; align-items: center; padding-left: 8px; }
+.bar-fill span { font-size: 10px; font-weight: 600; color: rgba(0,0,0,0.8); }
+.bar-pct { font-size: 11px; color: var(--muted2); width: 38px; text-align: right; flex-shrink: 0; }
+
+/* ── QUERY TABS ── */
+.query-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 4px;
+  border-radius: 7px;
+  width: fit-content;
+}
+.qtab {
+  padding: 7px 14px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--muted2);
+  transition: all 0.15s;
+}
+.qtab:hover { color: var(--text); }
+.qtab.active { background: var(--accent); color: #000; }
+
+/* ── TRACKER CARD ── */
+.tracker-search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.tracker-search .form-input { flex: 1; }
+.tracker-result {
+  display: none;
+}
+.tracker-result.show { display: block; }
+.tracker-student-header {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.tracker-avatar {
+  width: 50px; height: 50px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 800;
+  color: #000;
+  flex-shrink: 0;
+}
+.tracker-name { font-family: var(--sans); font-size: 18px; font-weight: 700; }
+.tracker-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* ── OFFER CARD ── */
+.offer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+}
+.offer-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.offer-card:hover { border-color: var(--border2); }
+.offer-card.accepted { border-color: rgba(34,197,94,0.4); }
+.offer-card.pending  { border-color: rgba(245,158,11,0.3); }
+.offer-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.offer-company { font-family: var(--sans); font-size: 16px; font-weight: 700; }
+.offer-role    { font-size: 11px; color: var(--muted2); margin-top: 2px; }
+.offer-pkg     { font-family: var(--sans); font-size: 22px; font-weight: 800; color: var(--accent); }
+.offer-pkg-sub { font-size: 10px; color: var(--muted); }
+.offer-student { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.offer-student-info { flex: 1; }
+.offer-student-name { font-weight: 600; font-size: 13px; }
+.offer-student-sub  { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.offer-actions { display: flex; gap: 8px; }
+
+/* ── LOADING ── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  color: var(--muted);
+  gap: 10px;
+  font-size: 12px;
+}
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center;
+  padding: 48px;
+  color: var(--muted);
+}
+.empty-icon { font-size: 32px; margin-bottom: 12px; }
+.empty-text { font-size: 13px; }
+
+/* ── TOAST ── */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 12px 18px;
+  font-size: 12px;
+  color: var(--text);
+  min-width: 260px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: toastIn 0.2s ease;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+@keyframes toastIn { from{transform:translateX(20px);opacity:0;} to{transform:translateX(0);opacity:1;} }
+.toast.success { border-left: 3px solid var(--green); }
+.toast.error   { border-left: 3px solid var(--red); }
+.toast.info    { border-left: 3px solid var(--accent); }
+
+/* ── RANK BADGE ── */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; height: 24px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.rank-1 { background: rgba(245,158,11,0.2); color: #f59e0b; }
+.rank-2 { background: rgba(148,163,184,0.2); color: #94a3b8; }
+.rank-3 { background: rgba(180,120,60,0.2); color: #b4783c; }
+.rank-n { background: rgba(100,116,139,0.1); color: var(--muted2); }
+
+/* ── HIGHLIGHT BOX ── */
+.trigger-box {
+  background: rgba(0,212,170,0.06);
+  border: 1px solid rgba(0,212,170,0.2);
+  border-radius: 6px;
+  padding: 14px 18px;
+  font-size: 11px;
+  color: var(--muted2);
+  margin-bottom: 20px;
+  line-height: 1.7;
+}
+.trigger-box strong { color: var(--accent); }
+
+.cpi-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cpi-pip {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+/* ══════════ MOBILE RESPONSIVENESS ══════════ */
+@media (max-width: 768px) {
+  /* 1. Turn Sidebar into a Swipeable Top Nav */
+  #sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo { padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+  .sidebar-nav { 
+    display: flex; 
+    flex-direction: row; 
+    overflow-x: auto; 
+    padding: 0 16px 10px; 
+    gap: 8px;
+  }
+  .nav-section-label { display: none; } /* Hide labels to save space */
+  .nav-item { 
+    border-left: none; 
+    border-bottom: 2px solid transparent; 
+    padding: 8px 12px; 
+    white-space: nowrap; 
+    border-radius: 4px;
+    background: var(--card);
+  }
+  .nav-item.active { border-left: none; border-bottom-color: var(--accent); }
+  .sidebar-footer { display: none; }
+
+  /* 2. Fix Main Content & Topbar */
+  #main { margin-left: 0; }
+  .topbar { padding: 12px 16px; height: auto; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .page { padding: 16px; }
+
+  /* 3. Stack Grid Layouts */
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .chart-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  
+  /* 4. Fix Headers & Modals */
+  .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .modal { width: 95vw; padding: 0; max-height: 90vh; }
+  .modal-head { padding: 16px; }
+  .modal-body { padding: 16px; }
+  
+  /* 5. Make Tables Swipeable Horizontally */
+  .table-wrap { overflow-x: auto; border-radius: 6px; }
+  .table-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  
+  /* 6. Tracker & Offers adjustments */
+  .tracker-student-header { flex-direction: column; text-align: center; gap: 10px; }
+  .offer-grid { grid-template-columns: 1fr; }
+  .query-tabs { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-tag">// CDC Portal</div>
+    <h1>Placement<br>Portal</h1>
+    <span class="course-tag">CS315 · IITK</span>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+      <span class="icon">◈</span> Dashboard
+    </div>
+    <div class="nav-section-label">Core</div>
+    <div class="nav-item" data-page="students" onclick="navigate('students')">
+      <span class="icon">◉</span> Students
+    </div>
+    <div class="nav-item" data-page="companies" onclick="navigate('companies')">
+      <span class="icon">◈</span> Companies
+    </div>
+    <div class="nav-item" data-page="applications" onclick="navigate('applications')">
+      <span class="icon">◎</span> Applications
+    </div>
+    <div class="nav-item" data-page="offers" onclick="navigate('offers')">
+      <span class="icon">◆</span> Offers
+    </div>
+    <div class="nav-section-label">Analytics</div>
+    <div class="nav-item" data-page="tracker" onclick="navigate('tracker')">
+      <span class="icon">◐</span> Tracker
+    </div>
+    <div class="nav-item" data-page="queries" onclick="navigate('queries')">
+      <span class="icon">⟩</span> Queries
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <span class="status-dot"></span>API Connected
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <span class="topbar-title" id="topbar-title">Dashboard</span>
+    <div class="topbar-right">
+      <span id="topbar-time" class="mono"></span>
+      <span class="badge-role">CDC Admin</span>
+    </div>
+  </div>
+
+  <!-- ── DASHBOARD ── -->
+  <div class="page active" id="page-dashboard">
+    <div class="section-header">
+      <div>
+        <h2>Placement Overview</h2>
+        <p>Branch-wise stats from <code>placement_dashboard</code> view · Live data</p>
+      </div>
+      <button class="btn btn-outline" onclick="loadDashboard()">↻ Refresh</button>
+    </div>
+
+    <div class="stats-row" id="overview-stats">
+      <div class="stat-card c-accent">
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value" id="s-total">—</div>
+        <div class="stat-sub">Registered in system</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-label">Placed</div>
+        <div class="stat-value" id="s-placed">—</div>
+        <div class="stat-sub">Offers accepted</div>
+      </div>
+      <div class="stat-card c-blue">
+        <div class="stat-label">Avg Package</div>
+        <div class="stat-value" id="s-avg">—</div>
+        <div class="stat-sub">LPA across branches</div>
+      </div>
+      <div class="stat-card c-orange">
+        <div class="stat-label">Max Package</div>
+        <div class="stat-value" id="s-max">—</div>
+        <div class="stat-sub">Highest offer LPA</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Placement % by Branch</div>
+        <div class="chart-sub">From VIEW: placement_dashboard</div>
+        <div class="bar-chart" id="branch-bar-chart"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Company Offers Breakdown</div>
+        <div class="chart-sub">From VIEW: company_stats</div>
+        <div class="bar-chart" id="company-bar-chart"></div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header">
+        <div>
+          <div class="table-header-title">Branch-wise Placement Dashboard</div>
+          <div class="table-header-sub">VIEW: placement_dashboard — aggregated with LEFT JOIN + GROUP BY</div>
+        </div>
+      </div>
+      <div id="dashboard-table-body">
+        <div class="loading"><div class="spinner"></div> Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STUDENTS ── -->
+  <div class="page" id="page-students">
+    <div class="section-header">
+      <div>
+        <h2>Students</h2>
+        <p>All registered students · sorted by CPI descending</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('add-student-modal')">+ Add Student</button>
+    </div>
+    <div class="table-wrap">
+      <div class="table-header">
+        <div>
+          <div class="table-header-title">Student Registry</div>
+          <div class="table-header-sub">TABLE: STUDENT · <span id="student-count">—</span> records</div>
+        </div>
+      </div>
+      <div id="students-table">
+        <div class="loading"><div class="spinner"></div> Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── COMPANIES ── -->
+  <div class="page" id="page-companies">
+    <div class="section-header">
+      <div>
+        <h2>Companies & Roles</h2>
+        <p>Company registry with offer analytics · <code>company_stats</code> view</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" onclick="navigate('companies'); loadCompanies()">↻ Refresh</button>
+        <button class="btn btn-primary" onclick="openModal('add-company-modal')">+ Add Company</button>
+      </div>
+    </div>
+    <div id="companies-content">
+      <div class="loading"><div class="spinner"></div> Loading...</div>
+    </div>
+  </div>
+
+  <!-- ── APPLICATIONS ── -->
+  <div class="page" id="page-applications">
+    <div class="section-header">
+      <div>
+        <h2>Applications</h2>
+        <p>All student applications · UNIQUE constraint on (student_id, role_id)</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('new-application-modal')">+ New Application</button>
+    </div>
+    <div class="table-wrap">
+      <div class="table-header">
+        <div>
+          <div class="table-header-title">Application Log</div>
+          <div class="table-header-sub">TABLE: APPLICATION · status updates fire TRIGGER trg_check_cpi_before_apply</div>
+        </div>
+      </div>
+      <div id="applications-table">
+        <div class="loading"><div class="spinner"></div> Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── OFFERS ── -->
+  <div class="page" id="page-offers">
+    <div class="section-header">
+      <div>
+        <h2>Offers</h2>
+        <p>Placement offers · Accepting fires DB triggers</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('new-offer-modal')">+ Create Offer</button>
+    </div>
+    <div class="trigger-box">
+      <strong>⚡ DB Triggers on OFFER.acceptance_status → 'accepted':</strong><br>
+      1. <strong>trg_auto_reject_on_acceptance</strong> — auto-rejects all other pending/shortlisted applications for this student<br>
+      2. <strong>trg_close_role_when_full</strong> — closes the job role if accepted count ≥ openings<br>
+      3. <strong>trg_auto_reject_on_acceptance</strong> — marks student eligible = FALSE (placed)
+    </div>
+    <div id="offers-content">
+      <div class="loading"><div class="spinner"></div> Loading...</div>
+    </div>
+  </div>
+
+  <!-- ── TRACKER ── -->
+  <div class="page" id="page-tracker">
+    <div class="section-header">
+      <div>
+        <h2>Application Tracker</h2>
+        <p>Per-student view · VIEW: application_tracker</p>
+      </div>
+    </div>
+    <div class="tracker-search">
+      <input class="form-input" id="tracker-input" placeholder="Enter Roll No (e.g. 22B0118)..." onkeydown="if(event.key==='Enter') runTracker()"/>
+      <button class="btn btn-primary" onclick="runTracker()">Search →</button>
+    </div>
+    <div class="tracker-result" id="tracker-result"></div>
+  </div>
+
+  <!-- ── QUERIES ── -->
+  <div class="page" id="page-queries">
+    <div class="section-header">
+      <div>
+        <h2>Interesting Queries</h2>
+        <p>Complex SQL — subqueries, window functions, aggregates</p>
+      </div>
+    </div>
+    <div class="query-tabs">
+      <div class="qtab active" onclick="switchQuery(0)">Tech Pass / HR Fail</div>
+      <div class="qtab" onclick="switchQuery(1)">No Offer ≥3 Apps</div>
+      <div class="qtab" onclick="switchQuery(2)">Company CPI Rank</div>
+    </div>
+    <div id="query-desc" class="trigger-box" style="margin-bottom:16px;"></div>
+    <div id="query-result">
+      <div class="loading"><div class="spinner"></div> Loading...</div>
+    </div>
+  </div>
+
+</div><!-- end #main -->
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- Add Student -->
+<div class="modal-overlay" id="add-student-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Add Student</h3>
+      <button class="modal-close" onclick="closeModal('add-student-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Roll No</label>
+          <input class="form-input" id="s-roll" placeholder="22B0121"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input" id="s-name" placeholder="Rahul Sharma"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+            <input class="form-input" id="s-email" type="email" placeholder="22b0121@iitk.ac.in"/>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Branch</label>
+          <select class="form-select" id="s-branch">
+            <option>CSE</option><option>EE</option><option>ME</option><option>CE</option><option>ChE</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">CPI</label>
+          <input class="form-input" id="s-cpi" type="number" step="0.01" min="0" max="10" placeholder="8.50"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Graduation Year</label>
+        <input class="form-input" id="s-grad" type="number" value="2026"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('add-student-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addStudent()">Add Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Company -->
+<div class="modal-overlay" id="add-company-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Add Company</h3>
+      <button class="modal-close" onclick="closeModal('add-company-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Company Name</label>
+          <input class="form-input" id="c-name" placeholder="Stripe"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sector</label>
+          <select class="form-select" id="c-sector">
+            <option>Tech</option><option>Finance</option><option>Core</option><option>Consult</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">HR Contact Email</label>
+          <input class="form-input" id="c-hr" type="email" placeholder="hr@company.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Min CPI Cutoff</label>
+          <input class="form-input" id="c-cpi" type="number" step="0.01" placeholder="7.50"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('add-company-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addCompany()">Add Company</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Role -->
+<div class="modal-overlay" id="add-role-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Add Job Role</h3>
+      <button class="modal-close" onclick="closeModal('add-role-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="role-company-id"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Role Title</label>
+          <input class="form-input" id="r-title" placeholder="SDE-1"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Package (LPA)</label>
+          <input class="form-input" id="r-pkg" type="number" step="0.01" placeholder="32.00"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input class="form-input" id="r-loc" placeholder="Bangalore"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Openings</label>
+          <input class="form-input" id="r-open" type="number" placeholder="2"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('add-role-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addRole()">Add Role</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Application -->
+<div class="modal-overlay" id="new-application-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Submit Application</h3>
+      <button class="modal-close" onclick="closeModal('new-application-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:11px;color:var(--muted);margin-bottom:16px;">
+        TRIGGER trg_check_cpi_before_apply will fire — verifies student CPI ≥ company min_cpi and eligibility flag.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Student</label>
+        <select class="form-select" id="app-student"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Job Role (Open Roles)</label>
+        <select class="form-select" id="app-role"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('new-application-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitApplication()">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Offer -->
+<div class="modal-overlay" id="new-offer-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Create Offer</h3>
+      <button class="modal-close" onclick="closeModal('new-offer-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Student (Shortlisted)</label>
+        <select class="form-select" id="offer-student"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Job Role</label>
+        <select class="form-select" id="offer-role"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Package Offered (LPA)</label>
+        <input class="form-input" id="offer-pkg" type="number" step="0.01" placeholder="45.00"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('new-offer-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createOffer()">Create Offer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Interview Modal -->
+<div class="modal-overlay" id="interview-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Add Interview Round</h3>
+      <button class="modal-close" onclick="closeModal('interview-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ir-app-id"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Round No</label>
+          <input class="form-input" id="ir-round-no" type="number" placeholder="1"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Round Type</label>
+          <select class="form-select" id="ir-type">
+            <option>Online Assessment</option>
+            <option>Technical</option>
+            <option>HR</option>
+            <option>Case Study</option>
+            <option>Group Discussion</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Result</label>
+          <select class="form-select" id="ir-result">
+            <option value="pending">Pending</option>
+            <option value="pass">Pass</option>
+            <option value="fail">Fail</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input class="form-input" id="ir-date" type="date"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('interview-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addInterviewRound()">Add Round</button>
+    </div>
+  </div>
+</div>
+
+<script>
+//const API = 'http://localhost:5000';
+const API = 'https://placement-portal-api-6m2r.onrender.com';
+
+// ── UTILS ──
+function toast(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icons = {success:'✓',error:'✕',info:'◈'};
+  el.innerHTML = `<span>${icons[type]||'◈'}</span> ${msg}`;
+  c.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateX(20px)'; el.style.transition='all 0.3s'; setTimeout(()=>el.remove(),300); }, 3500);
+}
+
+async function api(path, opts={}) {
+  const r = await fetch(API+path, {headers:{'Content-Type':'application/json'}, ...opts});
+  const d = await r.json();
+  if(!r.ok) throw new Error(d.error || 'Request failed');
+  return d;
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+
+// ── STATUS PILLS ──
+function statusPill(s) {
+  const map = {
+    applied:'pill-blue', shortlisted:'pill-yellow', offered:'pill-accent',
+    rejected:'pill-red', accepted:'pill-green', declined:'pill-red',
+    pending:'pill-yellow', pass:'pill-green', fail:'pill-red'
+  };
+  return `<span class="pill ${map[s]||'pill-muted'}">${s}</span>`;
+}
+function sectorPill(s) {
+  const map = {Tech:'pill-blue',Finance:'pill-green',Core:'pill-orange',Consult:'pill-purple'};
+  return `<span class="pill ${map[s]||'pill-muted'}">${s||'—'}</span>`;
+}
+
+// ── NAVIGATION ──
+const pageTitles = {
+  dashboard:'Dashboard', students:'Students', companies:'Companies & Roles',
+  applications:'Applications', offers:'Offers', tracker:'Application Tracker', queries:'Interesting Queries'
+};
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+  document.getElementById('topbar-title').textContent = pageTitles[page];
+
+  const loaders = {
+    dashboard: loadDashboard, students: loadStudents, companies: loadCompanies,
+    applications: loadApplications, offers: loadOffers, queries: ()=>runQuery(0)
+  };
+  if(loaders[page]) loaders[page]();
+}
+
+// Clock
+setInterval(()=>{
+  const t = new Date();
+  document.getElementById('topbar-time').textContent =
+    t.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+},1000);
+
+// ── DASHBOARD ──
+// ── DASHBOARD ──
+async function loadDashboard() {
+  try {
+    const [dash, cstats] = await Promise.all([
+      api('/application/dashboard'),
+      api('/company/stats')
+    ]);
+
+    let total=0, placed=0, maxPkg=0, totalPkgSum=0, totalPlaced=0;
+    dash.forEach(r=>{
+      total += parseInt(r.total_students) || 0;
+      placed += parseInt(r.placed_students) || 0;
+      
+      // Parse the MySQL strings into actual numbers
+      const rMax = parseFloat(r.max_package_lpa) || 0;
+      const rAvg = parseFloat(r.avg_package_lpa) || 0;
+      
+      if(rMax > maxPkg) maxPkg = rMax;
+      if(rAvg && r.placed_students) { 
+          totalPkgSum += rAvg * r.placed_students; 
+          totalPlaced += r.placed_students; 
+      }
+    });
+    
+    document.getElementById('s-total').textContent = total;
+    document.getElementById('s-placed').textContent = placed;
+    document.getElementById('s-avg').textContent = totalPlaced ? (totalPkgSum/totalPlaced).toFixed(1) : '—';
+    document.getElementById('s-max').textContent = maxPkg ? maxPkg.toFixed(1) : '—';
+
+    // Branch bar chart
+    const maxPct = Math.max(...dash.map(d=>parseFloat(d.placement_pct)||0), 1);
+    const branchColors = ['#00d4aa','#0088ff','#f59e0b','#a855f7'];
+    document.getElementById('branch-bar-chart').innerHTML = dash.map((d,i)=>`
+      <div class="bar-row">
+        <div class="bar-label">${d.branch}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${Math.max(((parseFloat(d.placement_pct)||0)/Math.max(maxPct,1))*100,2)}%;background:${branchColors[i%4]}">
+            <span>${d.placed_students}/${d.total_students}</span>
+          </div>
+        </div>
+        <div class="bar-pct">${d.placement_pct}%</div>
+      </div>
+    `).join('');
+
+    // Company bar chart
+    const maxOffers = Math.max(...cstats.map(c=>parseInt(c.total_offers)||0), 1);
+    document.getElementById('company-bar-chart').innerHTML = cstats.slice(0,6).map((c,i)=>`
+      <div class="bar-row">
+        <div class="bar-label" style="font-size:10px;overflow:hidden;text-overflow:ellipsis">${c.company_name.length>8?c.company_name.slice(0,8)+'..':c.company_name}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${Math.max(((parseInt(c.total_offers)||0)/maxOffers)*100,2)}%;background:${branchColors[(i+2)%4]}">
+            <span>${c.total_offers||0}</span>
+          </div>
+        </div>
+        <div class="bar-pct">${c.accepted_offers||0} acc</div>
+      </div>
+    `).join('');
+
+    // Dashboard table
+    document.getElementById('dashboard-table-body').innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Branch</th><th>Total Students</th><th>Placed</th>
+          <th>Placement %</th><th>Avg Package (LPA)</th><th>Max Package (LPA)</th>
+        </tr></thead>
+        <tbody>${dash.map(r=>`
+          <tr>
+            <td><strong>${r.branch}</strong></td>
+            <td class="mono">${r.total_students}</td>
+            <td class="mono">${r.placed_students}</td>
+            <td>
+              <div class="cpi-bar">
+                <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+                  <div style="width:${r.placement_pct}%;height:100%;background:var(--accent);border-radius:3px"></div>
+                </div>
+                <span class="mono" style="font-size:11px;color:var(--accent);width:42px;text-align:right">${r.placement_pct}%</span>
+              </div>
+            </td>
+            <td class="mono">${r.avg_package_lpa ? r.avg_package_lpa+' LPA' : '<span style="color:var(--muted)">—</span>'}</td>
+            <td class="mono">${r.max_package_lpa ? '<span style="color:var(--accent)">'+r.max_package_lpa+' LPA</span>' : '<span style="color:var(--muted)">—</span>'}</td>
+          </tr>
+        `).join('')}</tbody>
+      </table>`;
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ── STUDENTS ──
+async function loadStudents() {
+  try {
+    const students = await api('/student');
+    document.getElementById('student-count').textContent = students.length;
+    document.getElementById('students-table').innerHTML = `
+      <table>
+        <thead><tr>
+          <th>#</th><th>Roll No</th><th>Name</th><th>Branch</th>
+          <th>CPI</th><th>Grad Year</th><th>Status</th>
+        </tr></thead>
+        <tbody>${students.map((s,i)=>`
+          <tr>
+            <td class="muted-cell mono">${i+1}</td>
+            <td class="mono" style="color:var(--accent2)">${s.roll_no}</td>
+            <td><strong>${s.name}</strong></td>
+            <td>${s.branch}</td>
+            <td>
+              <div class="cpi-bar" style="gap:6px">
+                <div class="cpi-pip" style="background:${s.cpi>=8.5?'var(--green)':s.cpi>=7?'var(--yellow)':'var(--red)'}"></div>
+                <span class="mono" style="color:${s.cpi>=8.5?'var(--green)':s.cpi>=7?'var(--yellow)':'var(--red)'}">${s.cpi}</span>
+              </div>
+            </td>
+            <td class="mono muted-cell">${s.grad_year}</td>
+            <td>${s.eligible ? '<span class="pill pill-green">Eligible</span>' : '<span class="pill pill-accent">Placed</span>'}</td>
+          </tr>
+        `).join('')}</tbody>
+      </table>`;
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function addStudent() {
+  try {
+    await api('/student', {
+      method:'POST',
+      body: JSON.stringify({
+        roll_no: document.getElementById('s-roll').value.trim(),
+        name: document.getElementById('s-name').value.trim(),
+        email : document.getElementById('s-email').value.trim(),
+        branch: document.getElementById('s-branch').value,
+        cpi: parseFloat(document.getElementById('s-cpi').value),
+        grad_year: parseInt(document.getElementById('s-grad').value)
+      })
+    });
+    closeModal('add-student-modal');
+    toast('Student added successfully','success');
+    loadStudents();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ── COMPANIES ──
+async function loadCompanies() {
+  try {
+    const [companies, stats] = await Promise.all([api('/company'), api('/company/stats')]);
+    const statsMap = {};
+    stats.forEach(s=>{ statsMap[s.company_name] = s; });
+
+    const html = companies.map(c=>{
+      const s = statsMap[c.name] || {};
+      return `
+        <div class="table-wrap" style="margin-bottom:16px;">
+          <div class="table-header">
+            <div>
+              <div class="table-header-title" style="display:flex;align-items:center;gap:10px;">
+                ${c.name} ${sectorPill(c.sector)}
+              </div>
+              <div class="table-header-sub">
+                Min CPI: <span style="color:var(--yellow)">${c.min_cpi}</span> ·
+                HR: <span style="color:var(--accent2)">${c.hr_contact||'—'}</span> ·
+                Roles: ${s.total_roles||0} ·
+                Offers: ${s.total_offers||0} ·
+                Accepted: ${s.accepted_offers||0} ·
+                Avg Pkg: ${s.avg_package_offered ? s.avg_package_offered+' LPA' : '—'}
+              </div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="openAddRole(${c.company_id},'${c.name}')">+ Add Role</button>
+          </div>
+          <div id="roles-${c.company_id}">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('companies-content').innerHTML = html;
+    companies.forEach(c=>loadRoles(c.company_id));
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function loadRoles(company_id) {
+  try {
+    const roles = await api(`/company/${company_id}/roles`);
+    const el = document.getElementById('roles-'+company_id);
+    if(!roles.length) { el.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-text" style="color:var(--muted)">No roles added yet</div></div>'; return; }
+    el.innerHTML = `
+      <table>
+        <thead><tr><th>ID</th><th>Title</th><th>Package</th><th>Location</th><th>Openings</th><th>Status</th></tr></thead>
+        <tbody>${roles.map(r=>`
+          <tr>
+            <td class="mono muted-cell">#${r.role_id}</td>
+            <td><strong>${r.title}</strong></td>
+            <td class="mono" style="color:var(--accent)">${r.package_lpa} LPA</td>
+            <td class="muted-cell">${r.location||'—'}</td>
+            <td class="mono">${r.openings}</td>
+            <td>${r.is_open ? '<span class="pill pill-green">Open</span>' : '<span class="pill pill-muted">Closed</span>'}</td>
+          </tr>
+        `).join('')}</tbody>
+      </table>`;
+  } catch(e) {}
+}
+
+function openAddRole(company_id, name) {
+  document.getElementById('role-company-id').value = company_id;
+  document.querySelector('#add-role-modal .modal-head h3').textContent = `Add Role — ${name}`;
+  openModal('add-role-modal');
+}
+
+async function addCompany() {
+  try {
+    await api('/company', {
+      method:'POST',
+      body: JSON.stringify({
+        name: document.getElementById('c-name').value.trim(),
+        sector: document.getElementById('c-sector').value,
+        hr_contact: document.getElementById('c-hr').value.trim(),
+        min_cpi: parseFloat(document.getElementById('c-cpi').value)||0
+      })
+    });
+    closeModal('add-company-modal');
+    toast('Company added','success');
+    loadCompanies();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function addRole() {
+  try {
+    const cid = document.getElementById('role-company-id').value;
+    await api(`/company/${cid}/roles`, {
+      method:'POST',
+      body: JSON.stringify({
+        title: document.getElementById('r-title').value.trim(),
+        package_lpa: parseFloat(document.getElementById('r-pkg').value),
+        location: document.getElementById('r-loc').value.trim(),
+        openings: parseInt(document.getElementById('r-open').value)
+      })
+    });
+    closeModal('add-role-modal');
+    toast('Role added','success');
+    loadRoles(cid);
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ── APPLICATIONS ──
+async function loadApplications() {
+  try {
+    const apps = await api('/application');
+    document.getElementById('applications-table').innerHTML = `
+      <table>
+        <thead><tr>
+          <th>App ID</th><th>Student</th><th>Roll No</th>
+          <th>Company</th><th>Role</th><th>Package</th>
+          <th>Status</th><th>Applied</th><th>Actions</th>
+        </tr></thead>
+        <tbody>${apps.map(a=>`
+          <tr>
+            <td class="mono muted-cell">#${a.app_id}</td>
+            <td><strong>${a.student_name}</strong></td>
+            <td class="mono" style="color:var(--accent2)">${a.roll_no}</td>
+            <td>${a.company_name}</td>
+            <td>${a.role_title}</td>
+            <td class="mono" style="color:var(--accent)">${a.package_lpa} LPA</td>
+            <td id="app-status-${a.app_id}">${statusPill(a.status)}</td>
+            <td class="muted-cell mono" style="font-size:10px">${a.applied_date?.slice(0,10)||'—'}</td>
+            <td>
+              <div style="display:flex;gap:4px;flex-wrap:wrap">
+                ${['shortlisted','rejected'].map(st=>`
+                  <button class="btn btn-outline btn-sm" onclick="updateAppStatus(${a.app_id},'${st}')">${st}</button>
+                `).join('')}
+                <button class="btn btn-outline btn-sm" onclick="openInterviewModal(${a.app_id})">+ Round</button>
+              </div>
+            </td>
+          </tr>
+        `).join('')}</tbody>
+      </table>`;
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function updateAppStatus(app_id, status) {
+  try {
+    await api(`/application/${app_id}/status`, {method:'PUT', body:JSON.stringify({status})});
+    document.getElementById(`app-status-${app_id}`).innerHTML = statusPill(status);
+    toast(`Status → ${status}`,'success');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function openInterviewModal(app_id) {
+  document.getElementById('ir-app-id').value = app_id;
+  openModal('interview-modal');
+}
+
+async function addInterviewRound() {
+  try {
+    const app_id = document.getElementById('ir-app-id').value;
+    await api('/interview', {
+      method:'POST',
+      body: JSON.stringify({
+        app_id: parseInt(app_id),
+        round_no: parseInt(document.getElementById('ir-round-no').value),
+        round_type: document.getElementById('ir-type').value,
+        result: document.getElementById('ir-result').value,
+        round_date: document.getElementById('ir-date').value || null
+      })
+    });
+    closeModal('interview-modal');
+    toast('Interview round added','success');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function populateApplicationModal() {
+  const [students, roles] = await Promise.all([api('/student'), api('/company/roles/open')]);
+  document.getElementById('app-student').innerHTML = students.map(s=>`<option value="${s.student_id}">${s.name} (${s.roll_no}) — CPI ${s.cpi}</option>`).join('');
+  document.getElementById('app-role').innerHTML = roles.map(r=>`<option value="${r.role_id}">${r.company_name} — ${r.title} (${r.package_lpa} LPA)</option>`).join('');
+}
+
+async function submitApplication() {
+  try {
+    await api('/application', {
+      method:'POST',
+      body: JSON.stringify({
+        student_id: parseInt(document.getElementById('app-student').value),
+        role_id: parseInt(document.getElementById('app-role').value)
+      })
+    });
+    closeModal('new-application-modal');
+    toast('Application submitted — CPI trigger passed ✓','success');
+    loadApplications();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ── OFFERS ──
+async function loadOffers() {
+  try {
+    const offers = await api('/offer');
+    if(!offers.length) {
+      document.getElementById('offers-content').innerHTML = `<div class="empty"><div class="empty-icon">◎</div><div class="empty-text">No offers yet</div></div>`;
+      return;
+    }
+    document.getElementById('offers-content').innerHTML = `
+      <div class="offer-grid">${offers.map(o=>`
+        <div class="offer-card ${o.acceptance_status}">
+          <div class="offer-top">
+            <div>
+              <div class="offer-company">${o.company}</div>
+              <div class="offer-role">${o.role}</div>
+            </div>
+            <div style="text-align:right">
+              <div class="offer-pkg">${o.package_offered}</div>
+              <div class="offer-pkg-sub">LPA</div>
+            </div>
+          </div>
+          <div class="offer-student">
+            <div class="tracker-avatar" style="width:36px;height:36px;font-size:13px">${o.student_name.charAt(0)}</div>
+            <div class="offer-student-info">
+              <div class="offer-student-name">${o.student_name}</div>
+              <div class="offer-student-sub">${o.roll_no} · ${o.branch}</div>
+            </div>
+            ${statusPill(o.acceptance_status)}
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:12px">
+            Offer Date: ${o.offer_date?.slice(0,10)} · HR: ${o.hr_contact||'—'}
+          </div>
+          ${o.acceptance_status === 'pending' ? `
+            <div class="offer-actions">
+              <button class="btn btn-success btn-sm" style="flex:1" onclick="acceptOffer(${o.offer_id})">
+                ✓ Accept — Fire Triggers
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="declineOffer(${o.offer_id})">✕ Decline</button>
+            </div>
+          ` : `<div style="font-size:11px;color:var(--muted)">No actions available</div>`}
+        </div>
+      `).join('')}</div>`;
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function acceptOffer(offer_id) {
+  try {
+    const r = await api(`/offer/${offer_id}/accept`, {method:'PUT'});
+    toast('Offer accepted! All 3 triggers fired 🔥','success');
+    loadOffers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function declineOffer(offer_id) {
+  try {
+    await api(`/offer/${offer_id}/decline`, {method:'PUT'});
+    toast('Offer declined','info');
+    loadOffers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function populateOfferModal() {
+  const [students, roles] = await Promise.all([api('/student'), api('/company/roles/open')]);
+  document.getElementById('offer-student').innerHTML = students
+    .filter(s=>s.eligible)
+    .map(s=>`<option value="${s.student_id}">${s.name} (${s.roll_no})</option>`).join('');
+  document.getElementById('offer-role').innerHTML = roles.map(r=>`<option value="${r.role_id}">${r.company_name} — ${r.title}</option>`).join('');
+}
+
+async function createOffer() {
+  try {
+    await api('/offer', {
+      method:'POST',
+      body: JSON.stringify({
+        student_id: parseInt(document.getElementById('offer-student').value),
+        role_id: parseInt(document.getElementById('offer-role').value),
+        package_offered: parseFloat(document.getElementById('offer-pkg').value)
+      })
+    });
+    closeModal('new-offer-modal');
+    toast('Offer created','success');
+    loadOffers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ── TRACKER ──
+async function runTracker() {
+  const roll = document.getElementById('tracker-input').value.trim();
+  if(!roll) return toast('Enter a roll number','error');
+  try {
+    const [student, apps] = await Promise.all([api(`/student/${roll}`), api(`/student/${roll}/tracker`)]);
+    const el = document.getElementById('tracker-result');
+    el.classList.add('show');
+    el.innerHTML = `
+      <div class="tracker-student-header">
+        <div class="tracker-avatar">${student.name.charAt(0)}</div>
+        <div>
+          <div class="tracker-name">${student.name}</div>
+          <div class="tracker-meta">${student.roll_no} · ${student.branch} · CPI ${student.cpi} · ${student.grad_year}</div>
+          <div style="margin-top:8px">${student.eligible ? '<span class="pill pill-green">Eligible</span>' : '<span class="pill pill-accent">Placed ✓</span>'}</div>
+        </div>
+      </div>
+      ${apps.length ? `
+        <div class="table-wrap">
+          <div class="table-header">
+            <div class="table-header-title">Application History</div>
+            <div class="table-header-sub">VIEW: application_tracker · ${apps.length} application(s)</div>
+          </div>
+          <table>
+            <thead><tr>
+              <th>Company</th><th>Role</th><th>Package</th>
+              <th>App Status</th><th>Applied</th><th>Latest Round</th><th>Round Result</th>
+            </tr></thead>
+            <tbody>${apps.map(a=>`
+              <tr>
+                <td><strong>${a.company_name}</strong></td>
+                <td>${a.role_title}</td>
+                <td class="mono" style="color:var(--accent)">${a.role_package} LPA</td>
+                <td>${statusPill(a.app_status)}</td>
+                <td class="mono muted-cell" style="font-size:10px">${a.applied_date?.slice(0,10)||'—'}</td>
+                <td class="muted-cell">${a.latest_round_type ? `Round ${a.latest_round} — ${a.latest_round_type}` : '—'}</td>
+                <td>${a.latest_round_result ? statusPill(a.latest_round_result) : '<span class="muted-cell">—</span>'}</td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      ` : '<div class="empty"><div class="empty-text">No applications found for this student</div></div>'}
+    `;
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ── QUERIES ──
+const queryDefs = [
+  {
+    label: 'Tech Pass / HR Fail',
+    desc: '<strong>Query 1:</strong> Students who passed Technical round but subsequently failed HR round. Uses correlated subquery on INTERVIEW_ROUND with JOIN across APPLICATION → STUDENT → JOB_ROLE → COMPANY.',
+    url: '/application/queries/tech-pass-hr-fail',
+    cols: ['Name','Roll No','Branch','CPI','Company','Role'],
+    keys: ['name','roll_no','branch','cpi','company_name','role_title']
+  },
+  {
+    label: 'No Offer ≥3 Apps',
+    desc: '<strong>Query 2:</strong> Students with 3 or more applications but no accepted offer. Uses NOT IN subquery + GROUP BY + HAVING. Highlights students actively applying without success.',
+    url: '/application/queries/no-offer',
+    cols: ['Name','Roll No','Branch','CPI','Total Applications'],
+    keys: ['name','roll_no','branch','cpi','total_applications']
+  },
+  {
+    label: 'Company CPI Rank',
+    desc: '<strong>Query 3 (Window Function):</strong> Ranks students within each job role by CPI using <code style="color:var(--accent)">RANK() OVER (PARTITION BY role_id ORDER BY cpi DESC)</code>. Enter company ID below.',
+    url: null,
+    cols: ['Name','Roll No','Branch','CPI','Role','Status','CPI Rank'],
+    keys: ['name','roll_no','branch','cpi','role_title','status','cpi_rank'],
+    needsInput: true
+  }
+];
+
+let currentQuery = 0;
+async function switchQuery(i) {
+  currentQuery = i;
+  document.querySelectorAll('.qtab').forEach((t,idx)=>t.classList.toggle('active', idx===i));
+  const q = queryDefs[i];
+  document.getElementById('query-desc').innerHTML = q.desc +
+    (q.needsInput ? `<br><br><div style="display:flex;gap:8px;margin-top:8px"><input class="form-input" id="q-company-id" placeholder="Company ID (1-8)" style="max-width:200px"/><button class="btn btn-primary btn-sm" onclick="runQuery(${i})">Run Query</button></div>` : '');
+  await runQuery(i);
+}
+
+async function runQuery(i) {
+  const q = queryDefs[i];
+  const el = document.getElementById('query-result');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> Running query...</div>';
+  try {
+    let url = q.url;
+    if(q.needsInput) {
+      const cid = document.getElementById('q-company-id')?.value || 1;
+      url = `/application/queries/company-ranking/${cid}`;
+    }
+    const rows = await api(url);
+    if(!rows.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">◎</div><div class="empty-text">No results</div></div>'; return; }
+    el.innerHTML = `
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-header-title">${q.label}</div>
+          <div class="table-header-sub">${rows.length} row(s) returned</div>
+        </div>
+        <table>
+          <thead><tr>${q.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+          <tbody>${rows.map(r=>`
+            <tr>${q.keys.map(k=>{
+              if(k==='status') return `<td>${statusPill(r[k])}</td>`;
+              if(k==='cpi_rank') {
+                const cls = r[k]===1?'rank-1':r[k]===2?'rank-2':r[k]===3?'rank-3':'rank-n';
+                return `<td><span class="rank-badge ${cls}">${r[k]}</span></td>`;
+              }
+              if(k==='cpi') return `<td class="mono" style="color:${r[k]>=8.5?'var(--green)':r[k]>=7?'var(--yellow)':'var(--red)'}">${r[k]}</td>`;
+              return `<td class="${['roll_no','cpi','total_applications'].includes(k)?'mono':''}">${r[k]??'—'}</td>`;
+            }).join('')}</tr>
+          `).join('')}</tbody>
+        </table>
+      </div>`;
+  } catch(e) { toast(e.message,'error'); el.innerHTML = `<div class="empty"><div class="empty-text" style="color:var(--red)">${e.message}</div></div>`; }
+}
+
+// ── MODAL OPENERS WITH POPULATION ──
+const origOpenModal = openModal;
+window.openModal = function(id) {
+  if(id==='new-application-modal') populateApplicationModal();
+  if(id==='new-offer-modal') populateOfferModal();
+  document.getElementById(id).classList.add('open');
+};
+
+// ── BOOT ──
+loadDashboard();
+// Init query desc
+switchQuery(0);
+</script>
+</body>
+</html>

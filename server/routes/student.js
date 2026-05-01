@@ -41,7 +41,6 @@ router.get('/:roll_no/tracker', async (req, res) => {
 });
 
 // POST add a new student
-// POST add a new student
 router.post('/', async (req, res) => {
     try {
         // 1. We added 'email' to the destructured body
