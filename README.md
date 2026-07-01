@@ -1,9 +1,5 @@
 # 🎓 IITK Campus Placement Portal
 
-> **CS315 — Database Management Systems Project**
->
-> Live demo: <https://iitk-placement-portal.netlify.app/>
-
 A full-stack campus placement management system built with **Node.js / Express** (REST API), a **single-page web frontend**, and a **MySQL** database hosted on Aiven. It automates the entire placement lifecycle — from student registration and job applications, through interview rounds, to offer acceptance — while enforcing business rules through DB-level triggers, stored procedures, and views.
 
 ---
@@ -372,10 +368,6 @@ EMAIL_PASSWORD=your-16-char-app-password
 # Server
 PORT=5000
 ```
-
-> ⚠️ Never commit `.env` to version control. It is already listed in `.gitignore`.
-
----
 
 ## Seed Data
 
